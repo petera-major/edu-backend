@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-require('dotenv').config();
+require("dotenv").config();
 const OpenAI = require("openai");
 
 const app = express();
@@ -9,12 +9,15 @@ app.use(express.json());
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+app.get("/", (req, res) => {
+  res.send("EduLearnAI backend is running");
+});
+
 app.post("/api/chat", async (req, res) => {
   try {
     const { messages = [], subject, gradeLevel } = req.body;
 
-    const systemPrompt=
-    `You are EduLearnAi, a friendly, patient classroom tutor.
+    const systemPrompt = `You are EduLearnAi, a friendly, patient classroom tutor.
     - Explain concepts step-by-step in simple form, with bullet points and short paragraphs.
     - Use simple language, then add a concise example.
     - If math, show the steps neatly.
@@ -22,10 +25,10 @@ app.post("/api/chat", async (req, res) => {
     - Keep response under 200 words unless user asks for more.
     ${subject ? `Focus on the subject: ${subject}.` : ""}
     ${gradeLevel ? `Adapt difficulty to grade level: ${gradeLevel}.` : ""}`;
-    
+
     const formatted = [
-        { role:"system", content: systemPrompt},
-        ...messages
+      { role: "system", content: systemPrompt },
+      ...messages,
     ];
 
     const completion = await openai.chat.completions.create({
@@ -35,7 +38,9 @@ app.post("/api/chat", async (req, res) => {
       max_tokens: 600,
     });
 
-    const reply = completion.choices[0]?.message?.content?.trim() || "I couldn’t generate a response.";
+    const reply =
+      completion.choices[0]?.message?.content?.trim() ||
+      "I couldn’t generate a response.";
     res.json({ reply });
   } catch (err) {
     console.error(err);
@@ -43,4 +48,5 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-app.listen(5174, () => console.log("API running"));
+const PORT = process.env.PORT || 5174;
+app.listen(PORT, () => console.log(`API running on port ${PORT}`));
